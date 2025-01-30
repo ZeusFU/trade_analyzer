@@ -29,6 +29,12 @@ class TraderProfiler:
         self.trades['Day'] = self.trades['Open Time'].dt.normalize()
         self._validate_market_hours()
 
+     def _validate_market_hours(self):
+        same_day = (self.trades['Open Time'].dt.date == 
+                   self.trades['Close Time'].dt.date)
+        if not same_day.all():
+            invalid_trades = self.trades[~same_day]
+            raise ValueError(f"{len(invalid_trades)} trades cross market close")
     
     def _calculate_account_age(self):
         if self.trades.empty:
