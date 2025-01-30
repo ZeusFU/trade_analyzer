@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 
-# TraderProfiler class (updated with new features)
+# TraderProfiler class (updated without market hours validation)
 class TraderProfiler:
     def __init__(self, trades, initial_balance, daily_loss_limit, has_previous_account=False):
         self.trades = trades
@@ -27,15 +27,7 @@ class TraderProfiler:
         self.trades['Duration (min)'] = (self.trades['Close Time'] - 
                                        self.trades['Open Time']).dt.total_seconds() / 60
         self.trades['Day'] = self.trades['Open Time'].dt.normalize()
-        self._validate_market_hours()
 
-    def _validate_market_hours(self):
-        same_day = (self.trades['Open Time'].dt.date == 
-                   self.trades['Close Time'].dt.date)
-        if not same_day.all():
-            invalid_trades = self.trades[~same_day]
-            raise ValueError(f"{len(invalid_trades)} trades cross market close")
-    
     def _calculate_account_age(self):
         if self.trades.empty:
             return 0
