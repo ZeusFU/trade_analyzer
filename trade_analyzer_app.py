@@ -294,7 +294,7 @@ class TraderProfiler:
         consistency = "Stable" if analysis['survival']['consistency'] >= 5 else \
                      "Volatile" if analysis['survival']['consistency'] >= 3 else "Erratic"
         return f"{style} {risk} {survival_tier} ({consistency})"
-     def _calculate_top_assets(self):
+    def _calculate_top_assets(self):
         # Get top 3 traded assets by trade count
         top_assets = self.trades['Symbol'].value_counts().nlargest(3).index.tolist()
         
