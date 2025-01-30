@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 
-# TraderProfiler class (same as before, but without tkinter)
+# TraderProfiler class (updated with new features)
 class TraderProfiler:
     def __init__(self, trades, initial_balance, daily_loss_limit, has_previous_account=False):
         self.trades = trades
@@ -294,7 +294,25 @@ class TraderProfiler:
         consistency = "Stable" if analysis['survival']['consistency'] >= 5 else \
                      "Volatile" if analysis['survival']['consistency'] >= 3 else "Erratic"
         return f"{style} {risk} {survival_tier} ({consistency})"
-
+     def _calculate_top_assets(self):
+        # Get top 3 traded assets by trade count
+        top_assets = self.trades['Symbol'].value_counts().nlargest(3).index.tolist()
+        
+        # Calculate metrics for each asset
+        asset_metrics = []
+        for asset in top_assets:
+            asset_trades = self.trades[self.trades['Symbol'] == asset]
+            avg_contract_size = asset_trades['Volume'].mean()
+            total_trades = len(asset_trades)
+            total_profit = asset_trades['Net Profit'].sum()
+            asset_metrics.append({
+                'Asset': asset,
+                'Avg Contract Size': avg_contract_size,
+                'Total Trades': total_trades,
+                'Total Profit': total_profit
+            })
+        
+        return asset_metrics
 
 # Streamlit App
 def main():
@@ -337,8 +355,28 @@ def main():
                 st.write(f"**Category**: {results['risk_profile']['category']}")
                 st.write(f"**Loss Breaches**: {results['risk_profile']['metrics']['loss_breaches']}")
                 st.write(f"**Max Drawdown**: {results['risk_profile']['metrics']['max_drawdown']:.1f}%")
-                st.write(f"**Risk/Reward**: {results['risk_profile']['metrics']['rr_ratio']:.2f}:1")
-                st.write(f"**DLL Bonus**: +{results['risk_profile']['metrics']['dll_bonus']:.1f} pts")
+                
+                # Risk/Reward Ratio (Standard Format)
+                rr_ratio = results['risk_profile']['metrics']['rr_ratio']
+                st.write(f"**Risk/Reward Ratio**: {rr_ratio:.2f}:1")
+                
+                # Average Win and Average Loss
+                wins = trades[trades['Net Profit'] > 0]['Net Profit']
+                losses = trades[trades['Net Profit'] < 0]['Net Profit']
+                avg_win = wins.mean() if len(wins) > 0 else 0
+                avg_loss = losses.mean() if len(losses) > 0 else 0
+                st.write(f"**Avg Win**: ${avg_win:.2f}")
+                st.write(f"**Avg Loss**: ${avg_loss:.2f}")
+
+                # Top 3 Traded Assets
+                st.subheader("Top 3 Traded Assets")
+                top_assets = profiler._calculate_top_assets()
+                for asset in top_assets:
+                    st.write(f"**Asset**: {asset['Asset']}")
+                    st.write(f"  - **Avg Contract Size**: {asset['Avg Contract Size']:.2f}")
+                    st.write(f"  - **Total Trades**: {asset['Total Trades']}")
+                    st.write(f"  - **Total Profit**: ${asset['Total Profit']:.2f}")
+                    st.write("---")
 
                 # Consistency
                 st.subheader("Consistency")
