@@ -29,7 +29,7 @@ class TraderProfiler:
         self.trades['Day'] = self.trades['Open Time'].dt.normalize()
         self._validate_market_hours()
 
-     def _validate_market_hours(self):
+    def _validate_market_hours(self):
         same_day = (self.trades['Open Time'].dt.date == 
                    self.trades['Close Time'].dt.date)
         if not same_day.all():
